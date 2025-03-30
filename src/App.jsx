@@ -5,12 +5,13 @@ import Signup from './components/signup'
 import './styles/app.css';
 import Login from './components/login';
 import Card from './components/Card';
+import QuizCard from './components/Card';
 function App() {
   const [count, setCount] = useState(0)
 
   return (
     <div className='wrapper'>
-      <Signup></Signup>
+      <QuizCard></QuizCard>
     </div>
   )
 }
