@@ -2,6 +2,7 @@
 import React, { use, useState, useEffect } from "react";
 import { Card, Button, message } from "antd";
 import { CheckOutlined, CloseOutlined } from "@ant-design/icons";
+import "@ant-design/v5-patch-for-react-19";
 import { getQuizes } from "../utils/db";
 const QuizCard = () => {
   const [quizzes, SetQuizzes] = useState([]);
@@ -9,14 +10,14 @@ const QuizCard = () => {
   const [selectedOption, setSelectedOption] = useState("");
   const [isAnswered, setisAnswered] = useState(false);
   const [isFetched, setisFetched] = useState(false);
-  const [isDisabled, setisdDisabled] = useState(true);
+  const [isDisabled, setisdDisabled] = useState(false);
   useEffect(() => {
     let mounted = true;
     const handleQuestionFetch = async () => {
       try {
         const snapShots = await getQuizes();
         const quizData = snapShots.docs.map((doc) => ({
-          id: doc.id,
+          id: doc.id, selectedAns: selectedOption,
           ...doc.data(),
         }));
         if (mounted) {
@@ -41,16 +42,17 @@ const QuizCard = () => {
     };
   }, []);
 
-  const handleOptionSelect = async (OptionId) => {
+  const handleOptionSelect = (OptionId) => {
     try {
-      quizzes[currentQuestion].Options?.map((index, Option) => {
+      quizzes[currentQuestion].Options?.map((Option, index) => {
         if (OptionId == index) {
-          setSelectedOption((prevOption) => {
-            const newOption = prevOption + Option;
-            console.log(newOption);
-          });
+          setSelectedOption(Option);
           if (Option == quizzes[currentQuestion].Answer) {
             quizzes[currentQuestion].isCorrect = true;
+            console.log(quizzes[currentQuestion].isCorrect);
+          } else {
+            quizzes[currentQuestion].isCorrect = false;
+            console.log(quizzes[currentQuestion].isCorrect);
           }
         }
       });
@@ -60,21 +62,27 @@ const QuizCard = () => {
     }
   };
   const handleNextQuestion = () => {
-    if (currentQuestion < quizzes.length - 1) {
-      setCurrentQuestion(currentQuestion + 1);
-      setisdDisabled(false);
+    if (currentQuestion < quizzes.length) {
+      setCurrentQuestion((prevQue) => {
+        const nextQue = prevQue + 1;
+        console.log(nextQue);
+        return nextQue;
+      });
+      
+      
+      if (currentQuestion == quizzes.length - 1) {
+        setisdDisabled(true);
+      }
     } else {
       setCurrentQuestion(currentQuestion);
-      setisdDisabled(isDisabled);
     }
+    setisAnswered(false)
   };
   const handlePrevQuestion = () => {
     if (currentQuestion > 0) {
       setCurrentQuestion(currentQuestion - 1);
-      setisdDisabled(false);
     } else {
       setCurrentQuestion(currentQuestion);
-      setisdDisabled(isDisabled);
     }
   };
   return (
@@ -114,11 +122,11 @@ const QuizCard = () => {
             </p>
             <p className="text-white text-l">Time remaining: 30s</p>
           </div>
-          {selectedOption && (
+          {selectedOption && isAnswered && (
             <div className="mt-4 p-4 bg-white/20 rounded-lg border border-white/30">
-              <p className="text-white text-sm font-medium">Your answer:</p>
+              <p className="text-white text-md font-medium">Your answer:</p>
               <div className="mt-2 p-3 bg-white/30 rounded-md">
-                <p className="text-white font-bold"></p>
+                <p className="text-white font-bold">{selectedOption}</p>
               </div>
             </div>
           )}
@@ -134,6 +142,7 @@ const QuizCard = () => {
             <Button
               className="!rounded-button whitespace-nowrap bg-white text-indigo-600 hover:bg-white/90"
               onClick={handleNextQuestion}
+              disabled={isDisabled}
             >
               Next
             </Button>
